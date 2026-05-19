@@ -1,0 +1,17 @@
+services:
+  app:
+    build: .
+    container_name: novamart-crm
+    ports:
+      - "80:80"
+    env_file:
+      - ./server/.env
+    environment:
+      - DATABASE_PATH=/app/data/novamart-crm.sqlite
+      - PORT=8080
+      - NODE_ENV=development
+    volumes:
+      - novamart_sqlite_data:/app/data
+
+volumes:
+  novamart_sqlite_data:
