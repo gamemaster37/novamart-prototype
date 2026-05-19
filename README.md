@@ -10,6 +10,7 @@ NovaMart AI CRM is a Dockerized university project prototype for an AI-enabled r
 - Customer segmentation view for high-value, frequent buyer, at-risk, new, and dormant customers.
 - Campaign management with analytics and DeepSeek-powered campaign recommendations.
 - Support case management with create, status update, automated routing, and DeepSeek-powered draft responses.
+- Floating power-user guide helper for platform questions, powered by backend-only DeepSeek calls with fallback guidance.
 - Privacy/data-handling awareness page covering data minimisation, backend-only AI calls, key handling, audit trail, mock data, and human review.
 
 ## Tech Stack
@@ -36,7 +37,7 @@ The application runs in one Docker container.
 
 ## Environment Setup
 
-Create `server/.env` from `server/.env.example` if you want to replace the demo placeholder:
+Create `server/.env` from `server/.env.example` if you want to use file-based configuration:
 
 ```bash
 cp server/.env.example server/.env
@@ -58,10 +59,13 @@ DeepSeek `deepseek-v4-flash` is used for:
 - Customer next-best-action recommendations.
 - Campaign recommendations.
 - Support ticket response drafts and routing suggestions.
+- Power-user platform guide answers.
 
-If `DEEPSEEK_API_KEY` is missing or left as the placeholder value, the backend returns safe fallback demo responses and marks them with `is_fallback: true`. Successful DeepSeek responses are marked with `is_fallback: false`. All AI responses are saved in SQLite as an audit trail.
+`DEEPSEEK_API_KEY` can be provided either as an OS environment variable or in `server/.env`. OS environment variables take priority; `server/.env` is used as the fallback. If the key is missing or left as the placeholder value, the backend returns safe fallback demo responses and marks them with `is_fallback: true`. Successful DeepSeek responses are marked with `is_fallback: false`. All AI responses are saved in SQLite as an audit trail.
 
 AI ticket responses are draft suggestions only. They are not automatically sent to customers and do not automatically close support cases.
+
+The floating guide helper answers questions about how to use this CRM prototype. It is scoped to platform guidance and does not replace the CRM pages or automate work.
 
 ## Docker Instructions
 
@@ -69,6 +73,19 @@ Run:
 
 ```bash
 docker compose up --build
+```
+
+To use an OS environment variable instead of storing the key in `server/.env`:
+
+```bash
+export DEEPSEEK_API_KEY=your_deepseek_api_key_here
+docker compose up --build
+```
+
+or
+
+```bash
+DEEPSEEK_API_KEY="your_deepseek_api_key_here" docker compose up --build
 ```
 
 Open:

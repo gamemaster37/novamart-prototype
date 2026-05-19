@@ -5,6 +5,7 @@ import { StatusBadge } from "./StatusBadge";
 
 export function AIRecommendationCard({ recommendation, title = "AI Recommendation" }: { recommendation: AiRecommendation; title?: string }) {
   const response = typeof recommendation.response === "string" ? { response: recommendation.response } : recommendation.response;
+  const isFallback = recommendation.is_fallback === true || recommendation.is_fallback === 1 || recommendation.is_fallback === "true";
 
   return (
     <Card className="border-blue-200">
@@ -13,7 +14,7 @@ export function AIRecommendationCard({ recommendation, title = "AI Recommendatio
           <Sparkles className="h-4 w-4 text-blue-600" />
           <CardTitle>{title}</CardTitle>
         </div>
-        <StatusBadge value={recommendation.is_fallback ? "Fallback demo response" : "DeepSeek response"} />
+        <StatusBadge value={isFallback ? "Fallback demo response" : "DeepSeek response"} />
       </CardHeader>
       <CardContent>
         <dl className="grid gap-3 text-sm">

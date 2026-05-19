@@ -1,5 +1,6 @@
 import { Outlet } from "react-router-dom";
 import { Header } from "./Header";
+import { PlatformChatHelper } from "./PlatformChatHelper";
 import { Sidebar } from "./Sidebar";
 
 export function Layout() {
@@ -12,6 +13,7 @@ export function Layout() {
           <Outlet />
         </main>
       </div>
+      <PlatformChatHelper />
     </div>
   );
 }

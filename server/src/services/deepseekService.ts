@@ -3,7 +3,7 @@ import { getCampaignAnalytics, getCampaignById, getCampaigns } from "./campaignS
 import { getCustomerProfile } from "./customerService.js";
 import { getSupportCaseById } from "./supportCaseService.js";
 
-type AiType = "customer_recommendation" | "campaign_recommendation" | "ticket_response";
+type AiType = "customer_recommendation" | "campaign_recommendation" | "ticket_response" | "platform_chat";
 
 type AiResult = {
   type: AiType;
@@ -23,8 +23,24 @@ type DeepSeekResponse = {
   };
 };
 
+type ChatMessage = {
+  role: "user" | "assistant";
+  content: string;
+};
+
 const modelName = "deepseek-v4-flash";
 const defaultBaseUrl = "https://api.deepseek.com";
+const platformGuideContext = `
+NovaMart AI CRM demo guide:
+- Dashboard: KPI cards for total customers, active customers, monthly sales, retention rate, open support cases, campaign conversion, charts, and an inline AI summary.
+- Customers: searchable table with segment and churn-risk filters. Open a customer for profile details, purchase history, interactions, support cases, value summary, and saved AI audit trail.
+- Customer profile: use Generate AI Recommendation for churn risk, explanation, next best action, recommended campaign/category, and communication suggestion.
+- Segments: high-value, frequent buyers, at-risk, new, and dormant customers with rules and customer counts.
+- Campaigns: campaign list, analytics summary, and Generate AI Campaign Recommendation.
+- Support Cases: create tickets, auto-route category/priority/team, manually change status, and Generate AI Ticket Response. Draft responses require human review and are not sent automatically.
+- Privacy: explains mock data, backend-only AI calls, API key handling, data minimisation, human review, and audit trail.
+- All AI calls are backend-only through /api routes. The frontend never receives the DeepSeek API key.
+`;
 
 export async function generateCustomerRecommendation(customerId: number): Promise<AiResult> {
   const profile = getCustomerProfile(customerId);
@@ -120,6 +136,42 @@ export async function generateTicketResponse(supportCaseId: number): Promise<AiR
   });
 }
 
+export async function generatePlatformChat(question: string, history: ChatMessage[] = []): Promise<AiResult> {
+  const safeQuestion = question.trim().slice(0, 1000);
+  const safeHistory = history
+    .filter((message) => message.role === "user" || message.role === "assistant")
+    .slice(-6)
+    .map((message) => ({
+      role: message.role,
+      content: message.content.slice(0, 800)
+    }));
+
+  const prompt = `Return JSON only. You are a power-user guide for the NovaMart AI CRM university demo.
+Use only this platform context and the recent chat history to answer the staff member's question.
+Be concise, practical, and action-oriented. Do not answer unrelated general knowledge questions; redirect back to CRM usage.
+
+Platform context:
+${platformGuideContext}
+
+Recent chat history:
+${JSON.stringify(safeHistory)}
+
+Question:
+${safeQuestion}
+
+Required JSON keys: answer, suggestedNextStep, relatedArea.`;
+
+  const fallback = getPlatformChatFallback(safeQuestion);
+  const result = await callDeepSeekJson(prompt, fallback);
+
+  return saveAiResult({
+    type: "platform_chat",
+    prompt,
+    response: result.response,
+    isFallback: result.isFallback
+  });
+}
+
 async function callDeepSeekJson(prompt: string, fallback: Record<string, unknown>) {
   const apiKey = process.env.DEEPSEEK_API_KEY;
 
@@ -160,27 +212,83 @@ async function callDeepSeekJson(prompt: string, fallback: Record<string, unknown
       throw new Error("DeepSeek API response did not include message content");
     }
 
-    return { response: parseJson(text, fallback), isFallback: false };
+    return { response: parseJson(text), isFallback: false };
   } catch (error) {
     console.error("DeepSeek request failed, using fallback response.", error);
     return { response: fallback, isFallback: true };
   }
 }
 
-function parseJson(text: string, fallback: Record<string, unknown>) {
+function parseJson(text: string): Record<string, unknown> {
   try {
     return JSON.parse(text);
   } catch {
     const match = text.match(/\{[\s\S]*\}/);
     if (!match) {
-      return { ...fallback, modelText: text };
+      return { modelText: text };
     }
     try {
       return JSON.parse(match[0]);
     } catch {
-      return { ...fallback, modelText: text };
+      return { modelText: text };
     }
   }
+}
+
+function getPlatformChatFallback(question: string) {
+  const text = question.toLowerCase();
+
+  if (text.includes("support") || text.includes("ticket") || text.includes("case")) {
+    return {
+      answer:
+        "Use Support Cases to create a ticket, review its routed category, priority, and assigned team, then generate an AI Ticket Response as a draft for human review.",
+      suggestedNextStep: "Open Support Cases, create or select a case, then use Generate AI Ticket Response.",
+      relatedArea: "Support Cases"
+    };
+  }
+
+  if (text.includes("campaign")) {
+    return {
+      answer:
+        "Use Campaigns to compare conversion and revenue, then generate an AI campaign recommendation for target audience, channel, message copy, and expected outcome.",
+      suggestedNextStep: "Open Campaigns and click Generate AI Campaign Recommendation.",
+      relatedArea: "Campaigns"
+    };
+  }
+
+  if (text.includes("customer") || text.includes("profile") || text.includes("churn")) {
+    return {
+      answer:
+        "Use Customers to search or filter records, then open a profile to review purchase history, support cases, value summary, churn risk, and AI recommendations.",
+      suggestedNextStep: "Open Customers, select a customer, then click Generate AI Recommendation on the profile.",
+      relatedArea: "Customers"
+    };
+  }
+
+  if (text.includes("segment")) {
+    return {
+      answer:
+        "Use Segments to understand customer groups such as high-value, frequent buyers, at-risk, new, and dormant customers. Each segment shows its rule and count.",
+      suggestedNextStep: "Open Segments and compare counts against the rule descriptions.",
+      relatedArea: "Segments"
+    };
+  }
+
+  if (text.includes("privacy") || text.includes("data") || text.includes("key")) {
+    return {
+      answer:
+        "Use Privacy to explain mock data, backend-only DeepSeek calls, secure API key handling, data minimisation, human review, and AI audit trail controls.",
+      suggestedNextStep: "Open Privacy before the demo Q&A section.",
+      relatedArea: "Privacy"
+    };
+  }
+
+  return {
+    answer:
+      "I can guide you around this CRM demo. The main workflows are Dashboard, Customers, Segments, Campaigns, Support Cases, and Privacy.",
+    suggestedNextStep: "Ask about a specific workflow, such as customer recommendations, campaign AI, support routing, or privacy controls.",
+    relatedArea: "Platform Guide"
+  };
 }
 
 function saveAiResult(input: {

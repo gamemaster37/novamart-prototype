@@ -4,13 +4,14 @@ services:
     container_name: novamart-crm
     ports:
       - "80:80"
-    env_file:
-      - ./server/.env
     environment:
+      - DEEPSEEK_API_KEY
+      - DEEPSEEK_BASE_URL
       - DATABASE_PATH=/app/data/novamart-crm.sqlite
       - PORT=8080
       - NODE_ENV=development
     volumes:
+      - ./server/.env:/app/server/.env:ro
       - novamart_sqlite_data:/app/data
 
 volumes:

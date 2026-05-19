@@ -71,7 +71,7 @@ export type Segment = {
 export type AiRecommendation = {
   type: string;
   response: Record<string, unknown> | string;
-  is_fallback: boolean | number;
+  is_fallback: boolean | number | string;
   created_at?: string;
 };
 

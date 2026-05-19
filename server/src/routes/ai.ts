@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   generateCampaignRecommendation,
   generateCustomerRecommendation,
+  generatePlatformChat,
   generateTicketResponse
 } from "../services/deepseekService.js";
 
@@ -43,6 +44,21 @@ router.post("/ticket-response", async (req, res, next) => {
     }
 
     res.json(await generateTicketResponse(supportCaseId));
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/platform-chat", async (req, res, next) => {
+  try {
+    const question = String(req.body?.question || "").trim();
+    const history = Array.isArray(req.body?.history) ? req.body.history : [];
+
+    if (!question) {
+      throw Object.assign(new Error("question is required"), { status: 400 });
+    }
+
+    res.json(await generatePlatformChat(question, history));
   } catch (error) {
     next(error);
   }
