@@ -13,7 +13,7 @@ import { getDb } from "./database/db.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 
 const app = express();
-const port = Number(process.env.PORT || 8080);
+const port = Number(process.env.BACKEND_PORT || process.env.PORT || 8080);
 
 initDatabase();
 const customerCount = (getDb().prepare("SELECT COUNT(*) AS count FROM customers").get() as any).count;

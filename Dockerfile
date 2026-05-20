@@ -18,7 +18,7 @@ RUN mkdir -p /app/data
 RUN chmod +x /app/docker-entrypoint.sh
 
 ENV DATABASE_PATH=/app/data/novamart-crm.sqlite
-ENV PORT=8080
+ENV BACKEND_PORT=8080
 ENV NODE_ENV=development
 
 EXPOSE 80

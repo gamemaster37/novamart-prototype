@@ -48,7 +48,7 @@ Example:
 ```env
 DEEPSEEK_API_KEY=your_deepseek_api_key_here
 DEEPSEEK_BASE_URL=https://api.deepseek.com
-PORT=8080
+BACKEND_PORT=8080
 DATABASE_PATH=/app/data/novamart-crm.sqlite
 ```
 
@@ -96,6 +96,8 @@ http://localhost
 
 The compose file maps host port `80` to container port `80`. It does not expose backend port `8080` to the host.
 
+`BACKEND_PORT` controls the internal Express backend port. This avoids colliding with Cloud Run's reserved `PORT` variable, which should be used for the public container port.
+
 ## Local Development
 
 Install dependencies:
@@ -139,3 +141,19 @@ docker compose up --build
 - No automatic customer message sending.
 - No production privacy controls such as consent, retention policies, or access auditing.
 - Vite dev server is used intentionally for the single-container university demo and internal `/api` proxy behavior.
+
+## Google Cloud Run
+
+Cloud Run injects a reserved `PORT` variable for the public container listener. This project keeps the frontend on Cloud Run's public port and uses `BACKEND_PORT=8080` for the internal Express API.
+
+Example deploy command:
+
+```bash
+gcloud run deploy novamart-crm \
+  --source . \
+  --region australia-southeast1 \
+  --allow-unauthenticated \
+  --port 80 \
+  --set-env-vars BACKEND_PORT=8080,DEEPSEEK_BASE_URL=https://api.deepseek.com,DATABASE_PATH=/app/data/novamart-crm.sqlite,NODE_ENV=development \
+  --set-secrets DEEPSEEK_API_KEY=deepseek-api-key:latest
+```
