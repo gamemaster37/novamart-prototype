@@ -4,7 +4,7 @@ import {
   generateCustomerRecommendation,
   generatePlatformChat,
   generateTicketResponse
-} from "../services/deepseekService.js";
+} from "../services/aiService.js";
 
 const router = Router();
 

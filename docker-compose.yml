@@ -5,8 +5,9 @@ services:
     ports:
       - "80:80"
     environment:
-      - DEEPSEEK_API_KEY
-      - DEEPSEEK_BASE_URL
+      - AI_API_KEY
+      - AI_BASE_URL
+      - AI_MODEL
       - DATABASE_PATH=/app/data/novamart-crm.sqlite
       - BACKEND_PORT=8080
       - NODE_ENV=development

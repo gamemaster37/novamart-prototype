@@ -12,7 +12,7 @@ type AiResult = {
   created_at?: string;
 };
 
-type DeepSeekResponse = {
+type AIProviderResponse = {
   choices?: Array<{
     message?: {
       content?: string;
@@ -28,8 +28,8 @@ type ChatMessage = {
   content: string;
 };
 
-const modelName = "deepseek-v4-flash";
-const defaultBaseUrl = "https://api.deepseek.com";
+const modelName = process.env.AI_MODEL || "chat-assistant";
+const defaultBaseUrl = "";
 const platformGuideContext = `
 NovaMart AI CRM demo guide:
 - Dashboard: KPI cards for total customers, active customers, monthly sales, retention rate, open support cases, campaign conversion, charts, and an inline AI summary.
@@ -39,7 +39,7 @@ NovaMart AI CRM demo guide:
 - Campaigns: campaign list, analytics summary, and Generate AI Campaign Recommendation.
 - Support Cases: create tickets, auto-route category/priority/team, manually change status, and Generate AI Ticket Response. Draft responses require human review and are not sent automatically.
 - Privacy: explains mock data, backend-only AI calls, API key handling, data minimisation, human review, and audit trail.
-- All AI calls are backend-only through /api routes. The frontend never receives the DeepSeek API key.
+- All AI calls are backend-only through /api routes. The frontend never receives the AI provider API key.
 `;
 
 export async function generateCustomerRecommendation(customerId: number): Promise<AiResult> {
@@ -63,7 +63,7 @@ export async function generateCustomerRecommendation(customerId: number): Promis
     personalisedCommunicationSuggestion: `Hi ${(profile.customer as any).first_name}, we noticed your interest in ${(profile.customer as any).preferred_category}. Here is a tailored NovaMart offer selected for you.`
   };
 
-  const result = await callDeepSeekJson(prompt, fallback);
+  const result = await callAIJson(prompt, fallback);
   return saveAiResult({
     type: "customer_recommendation",
     prompt,
@@ -94,7 +94,7 @@ export async function generateCampaignRecommendation(campaignId?: number): Promi
     expectedOutcome: "Improve reactivation and increase campaign conversion among customers with declining purchase frequency."
   };
 
-  const result = await callDeepSeekJson(prompt, fallback);
+  const result = await callAIJson(prompt, fallback);
   return saveAiResult({
     type: "campaign_recommendation",
     prompt,
@@ -126,7 +126,7 @@ export async function generateTicketResponse(supportCaseId: number): Promise<AiR
       (supportCase as any).priority === "High" ? "High-priority or high-value customer issue." : "No immediate escalation trigger detected."
   };
 
-  const result = await callDeepSeekJson(prompt, fallback);
+  const result = await callAIJson(prompt, fallback);
   return saveAiResult({
     type: "ticket_response",
     prompt,
@@ -162,7 +162,7 @@ ${safeQuestion}
 Required JSON keys: answer, suggestedNextStep, relatedArea.`;
 
   const fallback = getPlatformChatFallback(safeQuestion);
-  const result = await callDeepSeekJson(prompt, fallback);
+  const result = await callAIJson(prompt, fallback);
 
   return saveAiResult({
     type: "platform_chat",
@@ -172,15 +172,15 @@ Required JSON keys: answer, suggestedNextStep, relatedArea.`;
   });
 }
 
-async function callDeepSeekJson(prompt: string, fallback: Record<string, unknown>) {
-  const apiKey = process.env.DEEPSEEK_API_KEY;
+async function callAIJson(prompt: string, fallback: Record<string, unknown>) {
+  const apiKey = process.env.AI_API_KEY;
+  const baseUrl = (process.env.AI_BASE_URL || defaultBaseUrl).replace(/\/+$/, "");
 
-  if (!apiKey || apiKey === "your_deepseek_api_key_here") {
+  if (!apiKey || apiKey === "your_ai_api_key_here" || !baseUrl) {
     return { response: fallback, isFallback: true };
   }
 
   try {
-    const baseUrl = (process.env.DEEPSEEK_BASE_URL || defaultBaseUrl).replace(/\/+$/, "");
     const response = await fetch(`${baseUrl}/chat/completions`, {
       method: "POST",
       headers: {
@@ -202,19 +202,19 @@ async function callDeepSeekJson(prompt: string, fallback: Record<string, unknown
       })
     });
 
-    const payload = (await response.json()) as DeepSeekResponse;
+    const payload = (await response.json()) as AIProviderResponse;
     if (!response.ok) {
-      throw new Error(payload.error?.message || `DeepSeek API request failed with status ${response.status}`);
+      throw new Error(payload.error?.message || `AI provider request failed with status ${response.status}`);
     }
 
     const text = payload.choices?.[0]?.message?.content;
     if (!text) {
-      throw new Error("DeepSeek API response did not include message content");
+      throw new Error("AI provider response did not include message content");
     }
 
     return { response: parseJson(text), isFallback: false };
   } catch (error) {
-    console.error("DeepSeek request failed, using fallback response.", error);
+    console.error("AI provider request failed, using fallback response.", error);
     return { response: fallback, isFallback: true };
   }
 }
@@ -277,7 +277,7 @@ function getPlatformChatFallback(question: string) {
   if (text.includes("privacy") || text.includes("data") || text.includes("key")) {
     return {
       answer:
-        "Use Privacy to explain mock data, backend-only DeepSeek calls, secure API key handling, data minimisation, human review, and AI audit trail controls.",
+        "Use Privacy to explain mock data, backend-only AI calls, secure API key handling, data minimisation, human review, and AI audit trail controls.",
       suggestedNextStep: "Open Privacy before the demo Q&A section.",
       relatedArea: "Privacy"
     };

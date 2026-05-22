@@ -14,7 +14,7 @@ export function AIRecommendationCard({ recommendation, title = "AI Recommendatio
           <Sparkles className="h-4 w-4 text-blue-600" />
           <CardTitle>{title}</CardTitle>
         </div>
-        <StatusBadge value={isFallback ? "Fallback demo response" : "DeepSeek response"} />
+        <StatusBadge value={isFallback ? "Fallback demo response" : "AI response"} />
       </CardHeader>
       <CardContent>
         <dl className="grid gap-3 text-sm">

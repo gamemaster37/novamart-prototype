@@ -21,7 +21,7 @@ export function Privacy() {
         </CardHeader>
         <CardContent className="space-y-4 text-sm leading-6 text-slate-700">
           <p>This university project demo uses mock customer data only. No real NovaMart customer records are included.</p>
-          <p>DeepSeek requests are made only by the backend and include only the minimum CRM context needed for the selected recommendation or ticket draft.</p>
+          <p>AI requests are made only by the backend and include only the minimum CRM context needed for the selected recommendation or ticket draft.</p>
           <p>The floating guide helper is limited to platform usage questions and uses the same backend-only AI pattern.</p>
           <p>AI-generated support responses are draft suggestions. They are not automatically sent to customers, and tickets are not automatically closed.</p>
           <p>AI recommendations are saved in SQLite as an audit trail. A real deployment would also require authentication, access controls, retention rules, consent management, and privacy compliance review.</p>
