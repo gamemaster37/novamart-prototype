@@ -1,6 +1,6 @@
 # NovaMart AI CRM MVP
 
-NovaMart AI CRM is a Dockerized university project prototype for an AI-enabled retail customer relationship management system. It demonstrates centralised customer data, profiles, segmentation, campaigns, support case management, dashboards, and backend-only DeepSeek assistance.
+NovaMart AI CRM is a Dockerized university project prototype for an AI-enabled retail customer relationship management system. It demonstrates centralised customer data, profiles, segmentation, campaigns, support case management, dashboards, and backend-only AI assistance.
 
 ## Features
 
@@ -8,9 +8,9 @@ NovaMart AI CRM is a Dockerized university project prototype for an AI-enabled r
 - Customer list with search and filters for segment and churn risk.
 - Customer profiles with contact data, source origin, purchase history, interactions, support cases, customer value summary, and saved AI recommendation audit trail.
 - Customer segmentation view for high-value, frequent buyer, at-risk, new, and dormant customers.
-- Campaign management with analytics and DeepSeek-powered campaign recommendations.
-- Support case management with create, status update, automated routing, and DeepSeek-powered draft responses.
-- Floating power-user guide helper for platform questions, powered by backend-only DeepSeek calls with fallback guidance.
+- Campaign management with analytics and AI-powered campaign recommendations.
+- Support case management with create, status update, automated routing, and AI-powered draft responses.
+- Floating power-user guide helper for platform questions, powered by backend-only AI calls with fallback guidance.
 - Privacy/data-handling awareness page covering data minimisation, backend-only AI calls, key handling, audit trail, mock data, and human review.
 
 ## Tech Stack
@@ -18,7 +18,7 @@ NovaMart AI CRM is a Dockerized university project prototype for an AI-enabled r
 - Frontend: React, TypeScript, Vite, Tailwind CSS, shadcn-style components, React Router, Recharts, Lucide React.
 - Backend: Node.js, Express, TypeScript.
 - Database: SQLite with `better-sqlite3`.
-- AI: DeepSeek API via backend service files only.
+- AI: configurable provider API via backend service files only.
 - DevOps: Docker and Docker Compose, single-container architecture.
 
 ## Architecture
@@ -33,7 +33,7 @@ The application runs in one Docker container.
 - Vite proxies `/api` requests to `http://localhost:8080` inside the container.
 - SQLite is stored at `/app/data/novamart-crm.sqlite`.
 - SQLite data persists through the Docker volume `novamart_sqlite_data`.
-- DeepSeek is called only from backend services and the API key is never sent to frontend code.
+- The AI provider is called only from backend services and the API key is never sent to frontend code.
 
 ## Environment Setup
 
@@ -46,22 +46,23 @@ cp server/.env.example server/.env
 Example:
 
 ```env
-DEEPSEEK_API_KEY=your_deepseek_api_key_here
-DEEPSEEK_BASE_URL=https://api.deepseek.com
+AI_API_KEY=your_ai_api_key_here
+AI_BASE_URL=https://api.example.com/v1
+AI_MODEL=chat-assistant
 BACKEND_PORT=8080
 DATABASE_PATH=/app/data/novamart-crm.sqlite
 ```
 
-## DeepSeek API Key
+## AI Provider API Key
 
-DeepSeek `deepseek-v4-flash` is used for:
+The configurable AI provider is used for:
 
 - Customer next-best-action recommendations.
 - Campaign recommendations.
 - Support ticket response drafts and routing suggestions.
 - Power-user platform guide answers.
 
-`DEEPSEEK_API_KEY` can be provided either as an OS environment variable or in `server/.env`. OS environment variables take priority; `server/.env` is used as the fallback. If the key is missing or left as the placeholder value, the backend returns safe fallback demo responses and marks them with `is_fallback: true`. Successful DeepSeek responses are marked with `is_fallback: false`. All AI responses are saved in SQLite as an audit trail.
+`AI_API_KEY`, `AI_BASE_URL`, and `AI_MODEL` can be provided either as OS environment variables or in `server/.env`. OS environment variables take priority; `server/.env` is used as the fallback. If the key or base URL is missing, or if the key is left as the placeholder value, the backend returns safe fallback demo responses and marks them with `is_fallback: true`. Successful AI provider responses are marked with `is_fallback: false`. All AI responses are saved in SQLite as an audit trail.
 
 AI ticket responses are draft suggestions only. They are not automatically sent to customers and do not automatically close support cases.
 
@@ -78,14 +79,14 @@ docker compose up --build
 To use an OS environment variable instead of storing the key in `server/.env`:
 
 ```bash
-export DEEPSEEK_API_KEY=your_deepseek_api_key_here
+export AI_API_KEY=your_ai_api_key_here
 docker compose up --build
 ```
 
 or
 
 ```bash
-DEEPSEEK_API_KEY="your_deepseek_api_key_here" docker compose up --build
+AI_API_KEY="your_ai_api_key_here" docker compose up --build
 ```
 
 Open:
@@ -154,6 +155,6 @@ gcloud run deploy novamart-crm \
   --region australia-southeast1 \
   --allow-unauthenticated \
   --port 80 \
-  --set-env-vars BACKEND_PORT=8080,DEEPSEEK_BASE_URL=https://api.deepseek.com,DATABASE_PATH=/app/data/novamart-crm.sqlite,NODE_ENV=development \
-  --set-secrets DEEPSEEK_API_KEY=deepseek-api-key:latest
+  --set-env-vars BACKEND_PORT=8080,AI_BASE_URL=https://api.example.com/v1,AI_MODEL=chat-assistant,DATABASE_PATH=/app/data/novamart-crm.sqlite,NODE_ENV=development \
+  --set-secrets AI_API_KEY=ai-api-key:latest
 ```

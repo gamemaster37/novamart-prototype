@@ -7,7 +7,7 @@ import { Button } from "./ui/Button";
 type ChatMessage = {
   role: "user" | "assistant";
   content: string;
-  source?: "deepseek" | "fallback";
+  source?: "ai" | "fallback";
 };
 
 type PlatformChatResponse = {
@@ -72,7 +72,7 @@ export function PlatformChatHelper() {
         {
           role: "assistant",
           content: answer || "I could not produce a guide response. Try asking about a specific CRM workflow.",
-          source: isFallback ? "fallback" : "deepseek"
+          source: isFallback ? "fallback" : "ai"
         }
       ]);
     } catch (error) {
@@ -101,7 +101,7 @@ export function PlatformChatHelper() {
               </div>
               <div>
                 <h2 className="text-sm font-bold text-slate-950">Power User Guide</h2>
-                <p className="text-xs text-slate-500">Backend-only DeepSeek helper</p>
+                <p className="text-xs text-slate-500">Backend-only AI helper</p>
               </div>
             </div>
             <button className="rounded-md p-2 text-slate-500 hover:bg-slate-100" onClick={() => setOpen(false)} aria-label="Close guide helper">
@@ -121,7 +121,7 @@ export function PlatformChatHelper() {
                   <p>{message.content}</p>
                   {message.source && (
                     <p className="mt-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-                      {message.source === "fallback" ? "Fallback guide" : "DeepSeek guide"}
+                      {message.source === "fallback" ? "Fallback guide" : "AI guide"}
                     </p>
                   )}
                 </div>

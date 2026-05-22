@@ -15,7 +15,7 @@ export function Header() {
           </span>
           <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-3 py-1.5 text-blue-700">
             <Sparkles className="h-3.5 w-3.5" />
-            Backend DeepSeek
+            Backend AI
           </span>
         </div>
       </div>
